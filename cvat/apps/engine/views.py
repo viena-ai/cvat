@@ -1460,15 +1460,6 @@ class JobViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
             dm.task.delete_job_data(pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         elif request.method == 'PATCH':
-            request_param_str = str(request._request)
-            if "action=create" in str(request._request):
-                print("----------------")
-                print("create request aako raixa")
-                print("----------------")
-            else:
-                print("----------------")
-                print(str(request._request))
-                print("----------------")
             action = self.request.query_params.get("action", None)
             if action not in dm.task.PatchAction.values():
                 raise serializers.ValidationError(
