@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     'cvat.apps.restrictions',
     'cvat.apps.lambda_manager',
     'cvat.apps.opencv',
+    'cvat.apps.custom'
 ]
 
 SITE_ID = 1

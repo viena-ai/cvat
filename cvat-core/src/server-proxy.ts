@@ -299,7 +299,26 @@ class ServerProxy {
             }
 
             return response.data;
-        }
+				}
+
+			async function check_user(username, password) {
+				let response = null;
+				try {
+					const data = JSON.stringify({
+						username,
+						password
+					});
+					response = await Axios.get(`${config.backendAPI}/does_user_exists`, data, {
+						proxy: config.proxy,
+						headers: {
+								'Content-Type': 'application/json',
+						},
+				});
+				}catch (errorData) {
+					throw generateError(errorData);
+				}
+				return response.data;
+			}
 
         async function register(username, firstName, lastName, email, password1, password2, confirmations) {
             let response = null;
@@ -2045,6 +2064,7 @@ class ServerProxy {
                         resetPassword,
                         authorized,
                         register,
+												check_user,
                         request: serverRequest,
                         userAgreements,
                         installedApps,

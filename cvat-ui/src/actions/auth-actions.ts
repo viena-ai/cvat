@@ -82,7 +82,6 @@ export const registerAsync = (
     confirmations: UserConfirmation[],
 ): ThunkAction => async (dispatch) => {
     dispatch(authActions.register());
-
     try {
         const user = await cvat.server.register(
             username,
@@ -111,6 +110,50 @@ export const loginAsync = (username: string, password: string): ThunkAction => a
         dispatch(authActions.loginFailed(error));
     }
 };
+
+export const AutoSignUp = async (username:string, password:string, firstName:string, lastName:string, email:string)=>{
+	try {
+		await cvat.server.register(
+			username,
+			firstName,
+			lastName,
+			email,
+			password,
+			password,
+			[],
+		);
+		await cvat.server.login(username, password);
+		return true;
+	}
+	catch (error) {
+		return false;
+	}
+
+}
+
+export const loginBypass = async(username: string, password: string) => {
+	try {
+		await cvat.server.login(username, password);
+		const users = await cvat.users.get({ self: true });
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
+
+export const signUpBypass = async (username:string, password:string)=>{
+	try {
+		const result = await cvat.server.check_user(username, password);
+		if (result["data"] === false) {
+			await AutoSignUp(username, password, "First", "Last", "helloworld@email.com");
+			await loginBypass(username, password);
+		}
+	}
+	catch (error) {
+		return false;
+	}
+}
+
 
 export const logoutAsync = (): ThunkAction => async (dispatch) => {
     dispatch(authActions.logout());

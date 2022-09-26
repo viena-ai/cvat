@@ -54,7 +54,12 @@ const config = require('./config');
         cvat.server.userAgreements.implementation = async () => {
             const result = await serverProxy.server.userAgreements();
             return result;
-        };
+				};
+
+				cvat.server.check_user.implementation = async (username, password) => {
+						const result = await serverProxy.server.check_user(username, password);
+						return result
+				};
 
         cvat.server.register.implementation = async (
             username,

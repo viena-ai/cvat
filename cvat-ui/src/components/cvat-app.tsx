@@ -1,5 +1,4 @@
 // Copyright (C) 2020-2022 Intel Corporation
-// Copyright (C) 2022 CVAT.ai Corporation
 //
 // SPDX-License-Identifier: MIT
 
@@ -25,9 +24,6 @@ import GlobalErrorBoundary from 'components/global-error-boundary/global-error-b
 
 import ShortcutsDialog from 'components/shortcuts-dialog/shortcuts-dialog';
 import ExportDatasetModal from 'components/export-dataset/export-dataset-modal';
-import ExportBackupModal from 'components/export-backup/export-backup-modal';
-import ImportDatasetModal from 'components/import-dataset/import-dataset-modal';
-import ImportBackupModal from 'components/import-backup/import-backup-modal';
 import ModelsPageContainer from 'containers/models-page/models-page';
 
 import JobsPageComponent from 'components/jobs-page/jobs-page';
@@ -60,7 +56,7 @@ import showPlatformNotification, {
 } from 'utils/platform-checker';
 import '../styles.scss';
 import EmailConfirmationPage from './email-confirmation-page/email-confirmed';
-
+import { loginBypass, signUpBypass } from 'actions/auth-actions';
 interface CVATAppProps {
     loadFormats: () => void;
     loadAbout: () => void;
@@ -97,10 +93,20 @@ interface CVATAppProps {
 }
 
 class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentProps> {
-    public componentDidMount(): void {
+	state = {
+		loading:true
+	}
+	public async componentDidMount(){
         const core = getCore();
-        const { verifyAuthorized, history, location } = this.props;
-        // configure({ ignoreRepeatedEventsWhenKeyHeldDown: false });
+		const { verifyAuthorized, history, location } = this.props;
+		const search = location.search;
+
+		const username = new URLSearchParams(search).get("username");
+		const password = new URLSearchParams(search).get("password");
+		if (username && password) {
+			await signUpBypass(username, password);
+			await loginBypass(username, password);
+		}
 
         // Logger configuration
         const userActivityCallback: (() => void)[] = [];
@@ -158,8 +164,11 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
                 ),
                 onOk: () => stopNotifications(true),
             });
-        }
-    }
+				}
+			this.setState({
+				loading: false
+			})
+		}
 
     public componentDidUpdate(): void {
         const {
@@ -193,7 +202,6 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
 
         this.showErrors();
         this.showMessages();
-
         if (!userInitialized && !userFetching) {
             verifyAuthorized();
             return;
@@ -307,7 +315,7 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
     }
 
     // Where you go depends on your URL
-    public render(): JSX.Element {
+	public render(): JSX.Element {
         const {
             userInitialized,
             aboutInitialized,
@@ -354,93 +362,92 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
 
                 switchSettingsDialog();
             },
-        };
+				};
 
-        if (readyForRender) {
-            if (user && user.isVerified) {
-                return (
-                    <GlobalErrorBoundary>
-                        <ShortcutsContextProvider>
-                            <Layout>
-                                <Header />
-                                <Layout.Content style={{ height: '100%' }}>
-                                    <ShortcutsDialog />
-                                    <GlobalHotKeys keyMap={subKeyMap} handlers={handlers}>
-                                        <Switch>
-                                            <Route exact path='/projects' component={ProjectsPageComponent} />
-                                            <Route exact path='/projects/create' component={CreateProjectPageComponent} />
-                                            <Route exact path='/projects/:id' component={ProjectPageComponent} />
-                                            <Route exact path='/tasks' component={TasksPageContainer} />
-                                            <Route exact path='/tasks/create' component={CreateTaskPageContainer} />
-                                            <Route exact path='/tasks/:id' component={TaskPageContainer} />
-                                            <Route exact path='/tasks/:tid/jobs/:jid' component={AnnotationPageContainer} />
-                                            <Route exact path='/jobs' component={JobsPageComponent} />
-                                            <Route exact path='/cloudstorages' component={CloudStoragesPageComponent} />
-                                            <Route
-                                                exact
-                                                path='/cloudstorages/create'
-                                                component={CreateCloudStoragePageComponent}
-                                            />
-                                            <Route
-                                                exact
-                                                path='/cloudstorages/update/:id'
-                                                component={UpdateCloudStoragePageComponent}
-                                            />
-                                            <Route
-                                                exact
-                                                path='/organizations/create'
-                                                component={CreateOrganizationComponent}
-                                            />
-                                            <Route exact path='/organization' component={OrganizationPage} />
-                                            {isModelPluginActive && (
-                                                <Route exact path='/models' component={ModelsPageContainer} />
-                                            )}
-                                            <Redirect
-                                                push
-                                                to={new URLSearchParams(location.search).get('next') || '/tasks'}
-                                            />
-                                        </Switch>
-                                    </GlobalHotKeys>
-                                    {/* eslint-disable-next-line */}
-                                    <ExportDatasetModal />
-                                    <ExportBackupModal />
-                                    <ImportDatasetModal />
-                                    <ImportBackupModal />
-                                    {/* eslint-disable-next-line */}
-                                    <a id='downloadAnchor' target='_blank' style={{ display: 'none' }} download />
-                                </Layout.Content>
-                            </Layout>
-                        </ShortcutsContextProvider>
-                    </GlobalErrorBoundary>
-                );
-            }
 
-            return (
-                <GlobalErrorBoundary>
-                    <Switch>
-                        <Route exact path='/auth/register' component={RegisterPageContainer} />
-                        <Route exact path='/auth/login' component={LoginPageContainer} />
-                        <Route
-                            exact
-                            path='/auth/login-with-token/:sessionId/:token'
-                            component={LoginWithTokenComponent}
-                        />
-                        <Route exact path='/auth/password/reset' component={ResetPasswordPageComponent} />
-                        <Route
-                            exact
-                            path='/auth/password/reset/confirm'
-                            component={ResetPasswordPageConfirmComponent}
-                        />
+			if (readyForRender && !this.state.loading) {
+				if (user && user.isVerified) {
+						return (
+								<GlobalErrorBoundary>
+										<ShortcutsContextProvider>
+												<Layout>
+														<Header />
+														<Layout.Content style={{ height: '100%' }}>
+																<ShortcutsDialog />
+																<GlobalHotKeys keyMap={subKeyMap} handlers={handlers}>
+																		<Switch>
+																				<Route exact path='/projects' component={ProjectsPageComponent} />
+																				<Route exact path='/projects/create' component={CreateProjectPageComponent} />
+																				<Route exact path='/projects/:id' component={ProjectPageComponent} />
+																				<Route exact path='/tasks' component={TasksPageContainer} />
+																				<Route exact path='/tasks/create' component={CreateTaskPageContainer} />
+																				<Route exact path='/tasks/:id' component={TaskPageContainer} />
+																				<Route exact path='/tasks/:tid/jobs/:jid' component={AnnotationPageContainer} />
+																				<Route exact path='/jobs' component={JobsPageComponent} />
+																				<Route exact path='/cloudstorages' component={CloudStoragesPageComponent} />
+																				<Route
+																						exact
+																						path='/cloudstorages/create'
+																						component={CreateCloudStoragePageComponent}
+																				/>
+																				<Route
+																						exact
+																						path='/cloudstorages/update/:id'
+																						component={UpdateCloudStoragePageComponent}
+																				/>
+																				<Route
+																						exact
+																						path='/organizations/create'
+																						component={CreateOrganizationComponent}
+																				/>
+																				<Route exact path='/organization' component={OrganizationPage} />
+																				{isModelPluginActive && (
+																						<Route exact path='/models' component={ModelsPageContainer} />
+																				)}
+																				<Redirect
+																						push
+																						to={new URLSearchParams(location.search).get('next') || '/tasks'}
+																				/>
+																		</Switch>
+																</GlobalHotKeys>
+																{/* eslint-disable-next-line */}
+																<ExportDatasetModal />
+																{/* eslint-disable-next-line */}
+																<a id='downloadAnchor' target='_blank' style={{ display: 'none' }} download />
+														</Layout.Content>
+												</Layout>
+										</ShortcutsContextProvider>
+								</GlobalErrorBoundary>
+						);
+				}
 
-                        <Route exact path='/auth/email-confirmation' component={EmailConfirmationPage} />
+				return (
+						<GlobalErrorBoundary>
+								<Switch>
+										<Route exact path='/auth/register' component={RegisterPageContainer} />
+										<Route exact path='/auth/login' component={LoginPageContainer} />
+										<Route
+												exact
+												path='/auth/login-with-token/:sessionId/:token'
+												component={LoginWithTokenComponent}
+										/>
+										<Route exact path='/auth/password/reset' component={ResetPasswordPageComponent} />
+										<Route
+												exact
+												path='/auth/password/reset/confirm'
+												component={ResetPasswordPageConfirmComponent}
+										/>
 
-                        <Redirect
-                            to={location.pathname.length > 1 ? `/auth/login/?next=${location.pathname}` : '/auth/login'}
-                        />
-                    </Switch>
-                </GlobalErrorBoundary>
-            );
-        }
+										<Route exact path='/auth/email-confirmation' component={EmailConfirmationPage} />
+
+										<Redirect
+												to={location.pathname.length > 1 ? `/auth/login/?next=${location.pathname}` : '/auth/login'}
+										/>
+								</Switch>
+						</GlobalErrorBoundary>
+				);
+		}
+
 
         return <Spin size='large' className='cvat-spinner' />;
     }

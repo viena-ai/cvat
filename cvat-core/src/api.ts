@@ -116,6 +116,10 @@ function build() {
                 const result = await PluginRegistry.apiWrapper(cvat.server.userAgreements);
                 return result;
             },
+						async check_user(username, password){
+							const result = await PluginRegistry.apiWrapper(cvat.server.check_user, username, password);
+                return result;
+						},
             /**
              * Method allows to register on a server
              * @method register

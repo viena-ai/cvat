@@ -46,4 +46,5 @@ urlpatterns = [
     path('api/', include('cvat.apps.iam.urls')),
     path('api/', include('cvat.apps.organizations.urls')),
     path('api/', include(router.urls)),
+    path('api/', include('cvat.apps.custom.urls'))
 ]
