@@ -54,9 +54,9 @@ from cvat.apps.engine.media_extractors import ImageListReader
 from cvat.apps.engine.mime_types import mimetypes
 from cvat.apps.engine.media_extractors import get_mime
 from cvat.apps.engine.models import (
-    Job, Task, Project, Issue, Data,
+    Job, Label, Task, Project, Issue, Data,
     Comment, StorageMethodChoice, StorageChoice, Image,
-    CloudProviderChoice, Location
+    CloudProviderChoice, Location, Organization
 )
 from cvat.apps.engine.models import CloudStorage as CloudStorageModel
 from cvat.apps.engine.serializers import (
@@ -1460,6 +1460,24 @@ class JobViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
             dm.task.delete_job_data(pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         elif request.method == 'PATCH':
+            if "action=create" in str(request._request):
+                tracks = request._data["tracks"]
+                for track in tracks:
+                    label_id = track['label_id']
+                    label = Label.objects.get(id = label_id)
+                    task = Task.objects.get(label__id = label_id)
+                    user_id = task.owner_id
+                    org_id = task.organization_id
+                    frame = track['shapes'][0]['frame']
+                    points = track['shapes'][0]['points']
+                    annotationPoints = []
+                    org = Organization.objects.get(id = org_id)
+                    for x,y in zip(*[iter(points)]*2):
+                        value = {'x': x, 'y': y}
+                        annotationPoints.append(value)
+                    print("----------------")
+                    print("Request to save annotation data")
+                    print("----------------")
             action = self.request.query_params.get("action", None)
             if action not in dm.task.PatchAction.values():
                 raise serializers.ValidationError(
