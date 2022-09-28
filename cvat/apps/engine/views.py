@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import requests
 import errno
 import io
 import os
@@ -1475,9 +1476,27 @@ class JobViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
                     for x,y in zip(*[iter(points)]*2):
                         value = {'x': x, 'y': y}
                         annotationPoints.append(value)
-                    print("----------------")
-                    print("Request to save annotation data")
-                    print("----------------")
+                    json_data = {
+                        'annotationList': [
+                            {
+                                'imageId': str(frame),
+                                'orgId': str(org.id),
+                                'taskId': str(task.id),
+                                'objectName': label.name,
+                                'annotationPolygonList': [
+                                    {
+                                        'annotationPoints': annotationPoints
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                    headers = {
+                        'accept': '*/*',
+                        # Already added when you pass json=
+                        # 'Content-Type': 'application/json',
+                    }
+                    response = requests.post(f'http://ec2co-ecsel-120oaoc0msxmg-363566620.us-east-1.elb.amazonaws.com:8081/images/user/{user_id}/org/{org.id}/task/{task.id}/image/{frame}/saveannotationfromcvat', headers=headers, json=json_data)
             action = self.request.query_params.get("action", None)
             if action not in dm.task.PatchAction.values():
                 raise serializers.ValidationError(
