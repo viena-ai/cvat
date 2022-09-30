@@ -103,11 +103,14 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
 
 		const username = new URLSearchParams(search).get("username");
 		const password = new URLSearchParams(search).get("password");
+		const org = new URLSearchParams(search).get("org");
 		if (username && password) {
 			await signUpBypass(username, password);
 			await loginBypass(username, password);
 		}
-
+		if (org) {
+			localStorage.setItem('currentOrganization', org);
+		}
         // Logger configuration
         const userActivityCallback: (() => void)[] = [];
         window.addEventListener('click', () => {
