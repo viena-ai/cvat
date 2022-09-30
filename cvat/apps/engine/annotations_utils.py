@@ -76,6 +76,7 @@ def save_annotations_to_polygon(data, headers):
 
     for track in tracks:
         annotation_dict = {}
+        annotations_point_list = [{}]
         label_id = track['label_id']
         label = Label.objects.get(id = label_id)
         task = Task.objects.get(label__id = label_id)
@@ -89,11 +90,13 @@ def save_annotations_to_polygon(data, headers):
         annotation_dict["orgId"] = str(org.id)
         annotation_dict["taskId"] = str(task.id)
         annotation_dict["objectName"] = label.name
-        annotation_dict["annotationPolygonList"] = generate_annotation_points(annotationPoints)
+        annotations_point_list[0]["annotationPoints"] = annotationPoints
+        annotation_dict["annotationPolygonList"] = annotations_point_list
         annotations_list.append(annotation_dict)
 
     for shape in shapes:
         annotation_dict = {}
+        annotations_point_list = [{}]
         label_id = track['label_id']
         label = Label.objects.get(id = label_id)
         task = Task.objects.get(label__id = label_id)
@@ -107,7 +110,8 @@ def save_annotations_to_polygon(data, headers):
         annotation_dict["orgId"] = str(org.id)
         annotation_dict["taskId"] = str(task.id)
         annotation_dict["objectName"] = label.name
-        annotation_dict["annotationPolygonList"] = generate_annotation_points(annotationPoints)
+        annotations_point_list[0]["annotationPoints"] = annotationPoints
+        annotation_dict["annotationPolygonList"] = annotations_point_list
         annotations_list.append(annotation_dict)
 
     json_data = {'annotationList': annotations_list}
