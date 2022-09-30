@@ -1,4 +1,5 @@
 import requests
+from operator import itemgetter
 
 from cvat.apps.engine.models import (
     Label, Task, Organization
@@ -114,5 +115,6 @@ def save_annotations_to_polygon(data, headers):
         annotation_dict["annotationPolygonList"] = annotations_point_list
         annotations_list.append(annotation_dict)
 
+    annotations_list = sorted(annotations_list, key= itemgetter('imageId'))
     json_data = {'annotationList': annotations_list}
     requests.post(f'http://ec2co-ecsel-120oaoc0msxmg-363566620.us-east-1.elb.amazonaws.com:8081/images/user/{user_id}/org/{org.id}/task/{task.id}/image/{frame}/saveannotationfromcvat', headers=headers, json=json_data)
