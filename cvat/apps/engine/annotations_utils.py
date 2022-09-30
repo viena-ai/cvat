@@ -11,7 +11,7 @@ def generate_annotation_points(points):
             annotation_points.append(value)
     return annotation_points
 
-def save_annotations_to_polygon(data, headers):
+def save_annotations_to_polygon_backup(data, headers):
     tracks = data["tracks"]
     shapes = data["shapes"]
     for track in tracks:
