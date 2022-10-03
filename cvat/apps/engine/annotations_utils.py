@@ -125,5 +125,6 @@ def save_annotations_to_polygon(data, headers, action):
 
     annotations_list = sorted(annotations_list, key= itemgetter('imageId'))
     json_data = {'annotationList': annotations_list}
-    if user_id and org and task and frame:
+
+    if user_id and org and task and str(frame):
         requests.post(f'http://ec2co-ecsel-120oaoc0msxmg-363566620.us-east-1.elb.amazonaws.com:8081/images/user/{user_id}/org/{org.id}/task/{task.id}/image/{frame}/saveannotationfromcvat', headers=headers, json=json_data)
