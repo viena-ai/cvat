@@ -10,6 +10,7 @@ import os.path as osp
 import pytz
 import shutil
 import traceback
+import json
 from datetime import datetime
 from distutils.util import strtobool
 from tempfile import mkstemp, NamedTemporaryFile
@@ -1461,15 +1462,14 @@ class JobViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
             dm.task.delete_job_data(pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         elif request.method == 'PATCH':
-            if "action=create" in str(request._request):
-                headers = {
+            headers = {
                     'accept': '*/*',
                     # Already added when you pass json=
                     # 'Content-Type': 'application/json',
                 }
-                save_annotations_to_polygon(request._data, headers)
-
             action = self.request.query_params.get("action", None)
+            if action == "update" or action == "delete":
+                save_annotations_to_polygon(request._data, headers, action)
             if action not in dm.task.PatchAction.values():
                 raise serializers.ValidationError(
                     "Please specify a correct 'action' for the request")
@@ -1479,6 +1479,8 @@ class JobViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
                     data = dm.task.patch_job_data(pk, serializer.data, action)
                 except (AttributeError, IntegrityError) as e:
                     return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
+                if action == "create":
+                    save_annotations_to_polygon(json.loads(json.dumps(data)), headers, action)
                 return Response(data)
 
     @extend_schema(methods=['PATCH'],
